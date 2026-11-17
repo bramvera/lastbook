@@ -10,7 +10,7 @@ towns and help points from OpenStreetMap. Indonesian names are preserved. Towns 
 are searchable offline. Multipolygon relations are assembled before encoding them in Lastbook's existing
 SQLite geometry format. There is no additional desktop dependency or network request.
 
-This is a country extract, not 38 provincial packs. The
+This is a country extract, not separate provincial packs. The
 [Geofabrik Indonesia extract](https://download.geofabrik.de/asia/indonesia.html) also includes Timor-Leste.
 That extra coverage is disclosed in the map's source metadata and panel; no political boundary clipping is claimed.
 A `--bbox` build is explicitly marked as a sample. Its bounding box is an intersection filter, so complete
@@ -26,7 +26,7 @@ viewable data is licensed for redistribution. It does not translate the library'
 
 Build dependencies are separate from desktop dependencies. Pyosmium is BSD-2-Clause and used only by the
 build tool. The tool reads a local input and opens no network connection. It records the source SHA-256,
-data date, coverage, feature counts and omitted-geometry count in its output. It refuses to overwrite an existing build.
+data date, coverage, feature counts and caught geometry-conversion errors in its output. It refuses to overwrite an existing build.
 
 ```sh
 python3 -m venv derived/map-tools
@@ -113,3 +113,22 @@ All seven new Indonesia tests pass, as do the eight existing address-search test
 The web/content shipping scan passes (34 files). A synthetic map was exercised in Chrome,
 including place search and regional attribution, and the Linux GTK app opened with an isolated test profile.
 These checks do not substitute for full-country data validation or tests on Windows/macOS.
+
+### Full extract validation
+
+On 18 November 2026, code at `aed51ce` built the complete Geofabrik
+`indonesia-261101.osm.pbf` snapshot (`2026-11-01T21:21:36Z`). Its publisher MD5
+was checked after download; the source SHA-256 is
+`ad78147654bb00cf777ed5e6a3270f29503c99670e6e1fa05ed4a11d7ebb3dda`.
+
+The result contains 50,638,845 features, 130,086 points of interest and 221,000
+searchable places. Thirty geometry-conversion errors were caught and skipped.
+Map files occupy 8,438,902,847 bytes; the archive is 2,930,228,976 bytes with SHA-256
+`e915da4bb348b2ed21d5109a2af41e62d7249998cc36038f7c85f768d05fa99d`.
+All SQLite quick checks, ZIP integrity and archive checksum verification passed.
+
+Offline city searches and nonempty rendered tiles passed for Jakarta, Bandung,
+Surabaya, Denpasar, Makassar and Jayapura. Jakarta search, roads and help points
+were also inspected in the browser. This verifies those paths on the full extract;
+it does not certify every mapped feature or establish complete real-world coverage.
+The archive is generated locally, not published as a hosted download.
