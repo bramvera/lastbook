@@ -84,7 +84,7 @@ CREATE VIRTUAL TABLE place_fts USING fts5(name,detail,content='place',content_ro
             if name:
                 counts['places'] += 1
                 places.execute('INSERT INTO place(name,kind,detail,lat,lon,rank,source) VALUES(?,?,?,?,?,?,?)',
-                               (name, kind.replace('_', ' '), COVERAGE, lat, lon, rank, 'OpenStreetMap'))
+                               (name, kind.replace('_', ' '), '', lat, lon, rank, 'OpenStreetMap'))
 
         def point(tags, lon, lat):
             if not inside([[lon, lat]]):

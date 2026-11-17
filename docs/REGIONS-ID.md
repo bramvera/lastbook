@@ -13,6 +13,8 @@ SQLite geometry format. There is no additional desktop dependency or network req
 This is a country extract, not separate provincial packs. The
 [Geofabrik Indonesia extract](https://download.geofabrik.de/asia/indonesia.html) also includes Timor-Leste.
 That extra coverage is disclosed in the map's source metadata and panel; no political boundary clipping is claimed.
+Extract coverage is not a place address. Search results omit that generic note, including
+when reading early IDN packs that stored it as every place's detail.
 A `--bbox` build is explicitly marked as a sample. Its bounding box is an intersection filter, so complete
 features crossing the box are retained. Coverage and completeness depend on OpenStreetMap contributors.
 

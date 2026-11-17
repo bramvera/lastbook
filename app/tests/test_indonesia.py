@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tools.build_indonesia import build, archive, preview, sha256
+from tools.build_indonesia import build, archive, preview, sha256, COVERAGE
 from tools.install_indonesia_map import install_map
 from engine.setup import install
 
@@ -76,6 +76,35 @@ class IndonesiaBuildTests(unittest.TestCase):
         install.swap_map(library, backup, undo)
         self.assertEqual(old.read_bytes(), b'old US map')
         self.assertEqual(install.map_name(library), 'base')
+
+    def test_place_details_do_not_claim_extract_coverage_as_location(self):
+        with sqlite3.connect(self.output / 'derived/geo/places.sqlite') as db:
+            self.assertEqual(db.execute('SELECT DISTINCT detail FROM place').fetchall(), [('',)])
+        self.assertEqual(self.info['coverage'], COVERAGE)
+
+    def test_legacy_place_details_hide_only_generic_coverage(self):
+        library = self.root / 'preview'
+        preview(self.output, library)
+        with sqlite3.connect(library / 'derived/geo/places.sqlite') as db:
+            db.execute('UPDATE place SET detail=? WHERE name=?', (COVERAGE, 'Rumah Sakit Contoh'))
+            db.execute('UPDATE place SET detail=? WHERE name=?', ('Bekasi, Jawa Barat', 'Kota Contoh'))
+            db.execute("INSERT INTO place_fts(place_fts) VALUES('rebuild')")
+        script = '''
+import server
+from unittest.mock import patch
+from tools.build_indonesia import COVERAGE
+assert server.places('Rumah Sakit Contoh')[0]['detail'] == ''
+assert server.places('Kota Contoh')[0]['detail'] == 'Bekasi, Jawa Barat'
+assert server.indonesia_map()['coverage'] == COVERAGE
+with patch.object(server, 'indonesia_map', return_value={'name': 'IDN', 'sample': False}):
+    assert any('Timor-Leste' in x['label'] for x in server.pack_datasets({}))
+with patch.object(server, 'indonesia_map', return_value=None):
+    assert server.places('Rumah Sakit Contoh')[0]['detail'] == COVERAGE
+'''
+        import os, sys
+        result = subprocess.run([sys.executable, '-c', script], cwd=ROOT,
+                                env={**os.environ, 'LASTBOOK_DATA': str(library)}, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_bad_checksum_never_touches_library(self):
         library = self.root / 'LastbookData'

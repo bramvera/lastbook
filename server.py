@@ -1437,11 +1437,15 @@ def places(q, limit=20, near=None):
     rows.sort(key=lambda r: (norm(r[0]) != ql, not norm(r[0]).startswith(ql), r[5] > 2 and norm(r[0]) == ql and importance(r),
                              -round(near_bonus(home, r[3], r[4])), r[5]))
     seen, out = set(), []
+    regional = indonesia_map()
     for name, kind, detail, lat, lon, rank, src in rows:
         k = (name.lower(), round(lat, 2), round(lon, 2))
         if k in seen:
             continue
         seen.add(k)
+        # Early IDN packs used extract coverage as every place's location.
+        if regional and detail == 'Indonesia; the source extract also includes Timor-Leste':
+            detail = ''
         out.append({'name': name, 'kind': kind, 'detail': detail, 'lat': lat, 'lon': lon, 'source': src,
                     'onMap': bool(pack_info()) or 32.5 < lat < 35.9 and -121.4 < lon < -114.1})
         if len(out) >= limit:
