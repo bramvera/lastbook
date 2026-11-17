@@ -1,0 +1,2 @@
+# Build-only OSM parser (BSD-2-Clause). Not imported by or bundled with the desktop app.
+osmium==4.3.0

@@ -9,6 +9,12 @@ Website: <https://lastbook.org>. Contact: hello@lastbook.org.
 > Lastbook’s original code and documentation are licensed under the [MIT License](LICENSE).
 > Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
 
+## Indonesia support in this fork
+
+This fork adds an offline OpenStreetMap builder for Indonesia, local map-pack installation with an old-map backup,
+and regional map/setup labels. See [Indonesia maps](docs/REGIONS-ID.md) for building, testing and opening a map.
+Map data is built separately; no Indonesia download is published on the upstream server by this change.
+
 ## Release status
 
 | Platform | Version | Status |

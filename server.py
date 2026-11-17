@@ -1394,6 +1394,8 @@ def water_places(q, limit=10, near=None):
 
 def places(q, limit=20, near=None):
     if address_search.is_address_query(q):
+        if indonesia_map():
+            return []  # retained US address indexes must not masquerade as Indonesian addresses
         return address_search.find_addresses(q, HERE / 'derived' / 'geo', limit=min(limit, 8), near=near)
     if not PLACEDB.exists():
         return []
@@ -1497,6 +1499,15 @@ _pack = {}
 SOURCES_PAGE = 'documents/lastbook/sources-and-permissions.html'   # every pack's own credits page, an ordinary record
 
 
+def indonesia_map():
+    """A locally built Indonesia map; ID remains the existing US state of Idaho."""
+    try:
+        info = json.loads((HERE / 'map-set.json').read_text(encoding='utf-8'))
+        return info if isinstance(info, dict) and info.get('name') == 'IDN' else None
+    except (OSError, ValueError):
+        return None
+
+
 def has_aerial():
     return any(p.exists() for p in (AERIALDB, AERIAL_DETAIL, AERIAL_COAST))
 
@@ -1531,6 +1542,12 @@ def map_contents():
                 db.close()
     for path in (LIB / 'geography/resources/atlas.sqlite', WATERDB, CROPDB):
         kinds |= set(_distinct(path, 'SELECT DISTINCT kind FROM resource'))
+    region = indonesia_map()
+    if region:  # road-only areas need framing too; pin extents alone can hide whole islands
+        box = region.get('bounds')
+        if (isinstance(box, list) and len(box) == 4 and all(isinstance(v, (int, float)) and math.isfinite(v) for v in box)
+                and -180 <= box[0] < box[2] <= 180 and -85 <= box[1] < box[3] <= 85):
+            boxes = [box]
     contours = any(r for r in _distinct(TERRAINDB, 'SELECT 1 FROM tile WHERE z>=11 LIMIT 1'))
     bounds = None
     if boxes:
@@ -1616,7 +1633,10 @@ def map_info():
         geo.append({'label': 'Aerial photos, whole US (USGS The National Map: USDA NAIP and other orthoimagery)', 'status': 'Zoom 0-15 nationwide, 16 in California and towns · downloading'})
     pack = pack_info()
     extra = {'aerial': has_aerial()}
-    if pack:
+    region = indonesia_map()
+    if region:
+        extra.update(region='IDN', data_as_of=str(region.get('data_as_of') or ''), terrain=False)
+    if pack or region:
         extra.update(map_contents())
         geo = pack_datasets(extra)
     return {**extra, 'meta': meta, 'datasets': geo, 'national': {k: v for k, v in national_status().items() if k not in ('source', 'database')}, 'version': data_version(), 'aerial_detail': detail, 'aerial_rev': rev, 'terrain_circle': tdetail}
@@ -1624,6 +1644,15 @@ def map_info():
 
 def pack_datasets(have):
     """The panel beside a pack's map says only what this pack's map files hold."""
+    region = indonesia_map()
+    if region:
+        area = 'the selected area' if region.get('sample') else 'the Indonesia extract (including Timor-Leste)'
+        return [
+            {'label': f'Streets, buildings, waterways and help points for {area}',
+             'status': '© OpenStreetMap contributors via Geofabrik, ODbL 1.0. Coverage depends on mapped features.'},
+            {'label': 'Place names (OpenStreetMap)', 'status': 'Offline search for mapped towns and named help points.'},
+            {'label': 'Not included', 'status': 'Terrain, crop inventory, aerial imagery and street-address search.'},
+        ]
     area = 'the area this map details' if have['bounds'] else 'the whole US'
     out = [{'label': 'Main roads, towns and water for the whole US (OpenStreetMap, USGS)', 'status': 'Shown at every zoom level'}]
     if have['detail']:

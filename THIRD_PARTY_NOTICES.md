@@ -79,3 +79,7 @@ There is no published iPad build. These parts go into an iPad app that a contrib
 The manuals, videos, encyclopedias and map data in the library packs are not part of this repository. Each pack has a
 Sources and permissions page with the publisher and terms of every item. The offline map uses OpenStreetMap data
 (ODbL, © OpenStreetMap contributors) and US government data such as USGS, NOAA and USACE, as credited on the map.
+
+## Indonesia map build tools (fork)
+
+Pyosmium 4.3.0 (https://osmcode.org/pyosmium/), BSD-2-Clause, is a build-only dependency. It is not bundled with the desktop app. Its libosmium/protozero components retain their upstream licenses. Indonesia map data comes from OpenStreetMap contributors via Geofabrik under ODbL 1.0; generated databases must retain attribution and comply with the database license. See docs/REGIONS-ID.md.
